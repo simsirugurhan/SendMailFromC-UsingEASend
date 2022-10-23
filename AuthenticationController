@@ -1,0 +1,49 @@
+using YOURProject.Models.Entity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http.Headers;
+using System.Web;
+using System.Web.Mvc;
+using System.Web.Security;
+
+namespace ptWeb.Controllers
+{
+    public class AuthenticationController : Controller
+    {
+        YOUREntities db = new YOUREntities();
+        
+        [HttpPost]
+        public ActionResult ForgotPassWord(User user)
+        {
+            User forgotUser = db.User.ToList().Where(x => x.email == user.email).FirstOrDefault();
+
+            if (forgotUser == null)
+            {
+                ViewBag.Mesaj = "This e-mail address was not found. Please check!";
+                /*
+                * if there is no such email, send this message to view.
+                */
+                return View();
+            }
+            else
+            {
+                Guid myuuid = Guid.NewGuid();
+                string myuuidAsString = myuuid.ToString(); //Unique pass created.
+          
+                forgotUser.password = myuuidAsString; // The unique password has been updated in the database as the user password.
+                db.SaveChanges();
+                /*
+                 * Save DB
+                 */
+
+                Mail mail = new Mail(); 
+                mail.SendMail("[YOUR APP]New Password Request", "This is your new password: \n"+ myuuidAsString + "\n\nThis email was sent by YOUR APP.", forgotUser.email.ToString());
+                //SendMail(subject,message,email)
+                return RedirectToAction("Index", "Home");
+            }
+
+        }
+
+    }
+}
